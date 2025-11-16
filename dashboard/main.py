@@ -18,17 +18,23 @@ import logging  # <-- added for logging
 logger = logging.getLogger("EcoFlareLogger")
 logger.setLevel(logging.INFO)
 
+# File handler - writes logs to app.log
 file_handler = logging.FileHandler("app.log")
 file_handler.setLevel(logging.INFO)
 
+# Formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
+
+# Add handler to logger
 logger.addHandler(file_handler)
 
+# Optional: console output for debugging
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
+# Log app start
 logger.info("EcoFlare Streamlit app started")
 
 # CRITICAL FIX: Add correct paths
@@ -152,8 +158,8 @@ st.sidebar.info("""
 @st.cache_data(ttl=60, show_spinner=False)
 def run_detection(lat, lon, location_name):
     """Run fire detection and return results"""
-    logger.info(f"Running fire detection for location: {location_name} ({lat}, {lon})")  # <-- log start
-    
+    logger.info(f"Running fire detection for location: {location_name} ({lat}, {lon})")
+
     results = {
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'location': location_name,
@@ -164,72 +170,72 @@ def run_detection(lat, lon, location_name):
         'evidence': [],
         'data_sources': {}
     }
-    
-    # Fetch data
+
+    # Fetch data -----------------------------------
     nasa_data = fetch_nasa_firms_data()
     results['data_sources']['nasa'] = nasa_data
-    
+
     cwfis_data = fetch_cwfis_data()
     results['data_sources']['cwfis'] = cwfis_data
-    
+
     weather_data = fetch_weather_data(lat, lon)
     results['data_sources']['weather'] = weather_data
-    
+
     iot_data = fetch_iot_sensor_data(location=location_name)
     results['data_sources']['iot'] = iot_data
-    
+
     veg_data = fetch_vegetation_data(lat, lon)
     results['data_sources']['vegetation'] = veg_data
-    
-    # Voting logic
+
+    # Voting logic ----------------------------------
     fire_votes = 0
-    
-    # Vote 1: Satellite
+
     if nasa_data is not None and len(nasa_data) > 0:
         fire_votes += 1
         results['evidence'].append(f"🛰️ Satellite: {len(nasa_data)} hotspots detected")
-    
-    # Vote 2: Official
+
     if cwfis_data is not None and len(cwfis_data) > 0:
         fire_votes += 1
         results['evidence'].append(f"🔥 Official: {len(cwfis_data)} active fires reported")
-    
-    # Vote 3: Weather
+
     if weather_data and 'current' in weather_data:
         temp = weather_data['current']['temperature_2m']
         humidity = weather_data['current']['relative_humidity_2m']
         wind_speed = weather_data['current'].get('wind_speed_10m', 0)
-        
+
         results['temperature'] = temp
         results['humidity'] = humidity
         results['wind_speed'] = wind_speed
-        
+
         if temp > 30 and humidity < 30:
             fire_votes += 1
-            results['evidence'].append(f"🌡️ Weather: Extreme conditions ({temp}°C, {humidity}% humidity)")
-    
-    # Vote 4: IoT
+            results['evidence'].append(
+                f"🌡️ Weather: Extreme conditions ({temp}°C, {humidity}% humidity)"
+            )
+
     iot_risk = analyze_iot_risk(iot_data)
     results['iot_risk'] = iot_risk
+
     if iot_risk in ['HIGH', 'MEDIUM'] or iot_data.get('flame_detected', False):
         fire_votes += 1
         results['evidence'].append(f"📡 IoT: {iot_risk} risk detected")
-    
-    # Vegetation
+
     veg_risk = get_vegetation_fire_risk(veg_data)
     results['vegetation_risk'] = veg_risk
-    
+
     results['fire_votes'] = fire_votes
     results['fire_detected'] = fire_votes >= 2
 
     # Log results
-    logger.info(f"Fire detection completed: {results['fire_detected']} with {results['fire_votes']}/{results['total_votes']} votes")
+    logger.info(
+        f"Fire detection completed: {results['fire_detected']} "
+        f"with {results['fire_votes']}/{results['total_votes']} votes"
+    )
     for ev in results['evidence']:
         logger.info(f"Evidence: {ev}")
-    
+
     return results
 
-# (The rest of your code remains exactly the same)
 # Run detection with loading spinner
 with st.spinner('🔍 Running multi-source wildfire detection...'):
     results = run_detection(lat, lon, location_preset if location_preset != "Custom" else "Custom Location")
@@ -239,10 +245,8 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.caption(f"🕐 Last updated: {results['timestamp']}")
 
-# Main detection result
-st.markdown("")
+# Main result UI -------------------------------
 col1, col2, col3 = st.columns([1, 3, 1])
-
 with col2:
     if results['fire_detected']:
         st.markdown(f"""
@@ -263,55 +267,38 @@ with col2:
 
 st.markdown("---")
 
-# Metrics row
+# Metrics row ----------------------------------
 st.subheader("📊 Real-time Detection Metrics")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     nasa_count = len(results['data_sources']['nasa']) if results['data_sources']['nasa'] is not None else 0
-    st.metric(
-        label="🛰️ Satellite Hotspots",
-        value=nasa_count,
-        delta="Active" if nasa_count > 0 else "None",
-        delta_color="inverse" if nasa_count > 0 else "off"
-    )
+    st.metric("🛰️ Satellite Hotspots", nasa_count, "Active" if nasa_count > 0 else "None")
 
 with col2:
     cwfis_count = len(results['data_sources']['cwfis']) if results['data_sources']['cwfis'] is not None else 0
-    st.metric(
-        label="🔥 Official Fires",
-        value=cwfis_count,
-        delta="Reported" if cwfis_count > 0 else "None",
-        delta_color="inverse" if cwfis_count > 0 else "off"
-    )
+    st.metric("🔥 Official Fires", cwfis_count, "Reported" if cwfis_count > 0 else "None")
 
 with col3:
     if 'temperature' in results:
-        st.metric(
-            label="🌡️ Temperature",
-            value=f"{results['temperature']}°C",
-            delta=f"{results['humidity']}% humidity"
-        )
+        st.metric("🌡️ Temperature", f"{results['temperature']}°C", f"{results['humidity']}% humidity")
     else:
-        st.metric(label="🌡️ Temperature", value="N/A")
+        st.metric("🌡️ Temperature", "N/A")
 
 with col4:
     iot_risk = results.get('iot_risk', 'UNKNOWN')
     risk_emoji = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢", "UNKNOWN": "⚪"}
-    st.metric(
-        label="📡 IoT Sensor Risk",
-        value=f"{risk_emoji.get(iot_risk, '⚪')} {iot_risk}"
-    )
+    st.metric("📡 IoT Sensor Risk", f"{risk_emoji.get(iot_risk)} {iot_risk}")
 
 st.markdown("---")
 
-# Evidence section
+# Evidence section -----------------------------
 st.subheader("🔍 Detection Evidence")
 if results['evidence']:
-    for evidence in results['evidence']:
-        st.success(evidence)
+    for e in results['evidence']:
+        st.success(e)
 else:
-    st.info("✅ No fire indicators detected from any source")
+    st.info("No fire indicators detected")
 
 # Vegetation risk
 veg_risk = results.get('vegetation_risk', 'UNKNOWN')
@@ -320,33 +307,31 @@ getattr(st, veg_color.get(veg_risk, "info"))(f"🌲 Vegetation Fire Risk: **{veg
 
 st.markdown("---")
 
-# Detailed data sections
+# Detailed Data Sections ------------------------
 with st.expander("📡 View Detailed Source Data"):
     tab1, tab2, tab3, tab4 = st.tabs(["🛰️ Satellite", "🌡️ Weather", "📡 IoT", "🌲 Vegetation"])
-    
+
     with tab1:
         st.subheader("NASA FIRMS Satellite Hotspots")
-        if results['data_sources']['nasa'] is not None and len(results['data_sources']['nasa']) > 0:
-            st.dataframe(results['data_sources']['nasa'].head(10), use_container_width=True)
-            st.caption(f"Showing top 10 of {len(results['data_sources']['nasa'])} hotspots")
+        if results['data_sources']['nasa']:
+            st.dataframe(results['data_sources']['nasa'].head(10))
         else:
-            st.info("No satellite hotspots detected in Ontario region")
-    
+            st.info("No satellite hotspots detected")
+
     with tab2:
         st.subheader("Current Weather Conditions")
-        if results['data_sources']['weather'] and 'current' in results['data_sources']['weather']:
-            weather = results['data_sources']['weather']['current']
-            st.json(weather)
+        if results['data_sources']['weather']:
+            st.json(results['data_sources']['weather']['current'])
         else:
             st.info("Weather data unavailable")
-    
+
     with tab3:
         st.subheader("IoT Sensor Readings")
         if results['data_sources']['iot']:
             st.json(results['data_sources']['iot'])
         else:
             st.info("No IoT data available")
-    
+
     with tab4:
         st.subheader("Vegetation & Land Cover Analysis")
         if results['data_sources']['vegetation']:
@@ -354,7 +339,7 @@ with st.expander("📡 View Detailed Source Data"):
         else:
             st.info("No vegetation data available")
 
-# Footer
+# Footer ---------------------------------------
 st.markdown("---")
 st.caption("🔥 EcoFlare AI - Wildfire Detection & Management System | Built with ❤️ for Ontario")
-logger.info("EcoFlare Streamlit app finished rendering")
+            
