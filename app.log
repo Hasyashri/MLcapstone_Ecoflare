@@ -260,3 +260,8 @@
 2025-11-16 13:42:04,170 - EcoFlareLogger - INFO - EcoFlare Streamlit app finished rendering
 2025-11-16 13:42:04,170 - EcoFlareLogger - INFO - EcoFlare Streamlit app finished rendering
 2025-11-16 13:42:04,172 - EcoFlareLogger - INFO - EcoFlare Streamlit app finished rendering
+2025-11-24 16:37:46,534 - EcoFlareLogger - INFO - EcoFlare Streamlit app started
+2025-11-24 16:37:51,415 - EcoFlareLogger - INFO - Running fire detection for location: Toronto (43.65, -79.38)
+2025-11-24 16:37:52,589 - EcoFlareLogger - INFO - Fire detection completed: True with 3/4 votes
+2025-11-24 16:37:52,899 - EcoFlareLogger - INFO - EcoFlare Streamlit app finished rendering
+2025-11-24 16:39:51,109 - EcoFlareLogger - INFO - EcoFlare Streamlit app started
