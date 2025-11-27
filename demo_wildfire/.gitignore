@@ -1,0 +1,11 @@
+# ignore large files and folders
+*.ckpt
+__pycache__/
+.ipynb_checkpoints
+data/
+models/
+logs/
+train/wildfire/
+train/nowildfire/
+wildfire_demo/input/wildfire/
+wildfire_demo/input/no_wildfire/

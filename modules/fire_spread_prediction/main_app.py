@@ -4,7 +4,7 @@ from dashboard.root_cause_ui import show_root_cause_analysis
 from dashboard.fire_spread_prediction_ui import show_fire_spread_prediction
 
 def main():
-    st.title("🔥 EcoFlare Wildfire Management Dashboard")
+    st.title(" EcoFlare Wildfire Management Dashboard")
 
     # Fire Detection Module
     detection_results = show_fire_detection()
