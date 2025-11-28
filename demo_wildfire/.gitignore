@@ -9,3 +9,11 @@ train/wildfire/
 train/nowildfire/
 wildfire_demo/input/wildfire/
 wildfire_demo/input/no_wildfire/
+# ignore system files
+.DS_Store
+# ignore environment files
+.env
+.venv/
+env/
+venv.bak/
+venv/
