@@ -35,6 +35,37 @@ We use **500 wildfire images** and **500 non-wildfire images** to train a model 
    - firedetection.ipynb
 
 
+## **Architecture**
+
+                          ┌────────────────────┐
+                          │     Data Sources    │
+                          │ (Satellite / API)   │
+                          └──────────┬──────────┘
+                                     │
+                             Ingestion & Cleaning
+                                     │
+                           ┌─────────▼──────────┐
+                           │   Preprocessing     │
+                           │ (OpenCV, Filters)   │
+                           └─────────┬──────────┘
+                                     │
+                                ML Detection
+                                     │
+                           ┌─────────▼──────────┐
+                           │  Backend Modules    │
+                           │ (modules/, utils/)  │
+                           └─────────┬──────────┘
+                                     │
+                              Streamlit UI
+                       (dashboard/ — Interactive Map)
+                                     │
+                           ┌─────────▼─────────┐
+                           │      Logging       │
+                           │ (app.log, logs/)   │
+                           └────────────────────┘
+
+
+
 ## **Output**
 
 Trained CNN model (wildfire_demo_cnn.h5) saved.
