@@ -1,16 +1,13 @@
 import os
 import sys
 
-# Make project root importable (so 'modules' can be found)
+# Fix module import paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-    
-from modules.root_cause_analysis.root_cause_ui import render_root_cause_tab
+import streamlit as st   # ← REQUIRED
 
-# ...
-tab1, tab2, tab3 = st.tabs(["Detection", "Spread Prediction", "Root Cause"])
-# ...
-with tab3:
-    render_root_cause_tab()
+from modules.fire_detection.fire_detection_logic import run_detection_voting
+from modules.fire_spread_prediction.ml_integration import run_spread_prediction_pipeline
+from modules.root_cause_analysis.root_cause_ui import render_root_cause_tab
