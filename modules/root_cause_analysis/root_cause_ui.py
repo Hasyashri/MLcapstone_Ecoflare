@@ -6,7 +6,7 @@ Call `render_root_cause_tab()` from your main dashboard file.
 """
 
 import streamlit as st
-from .root_cause_classification import predict_root_cause
+from .root_cause_classifier import predict_root_cause
 
 
 def render_root_cause_tab():
