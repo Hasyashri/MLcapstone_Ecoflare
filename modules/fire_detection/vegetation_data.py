@@ -1,63 +1,26 @@
-# ===============================================
-# File: modules/fire_detection/vegetation_data.py
-# Purpose: Fetch vegetation data for fire risk assessment
-# ===============================================
+# modules/fire_detection/vegetation_data.py
 
-def fetch_vegetation_data(lat=43.65, lon=-79.38):
+"""
+Vegetation / fuel risk helper for MVP 1 – Detection.
+"""
+
+from typing import Dict, Any
+import random
+
+
+def get_vegetation_risk(lat: float, lon: float) -> Dict[str, Any]:
     """
-    Get vegetation data using geographic fallback for Ontario.
-    Returns fire risk based on region.
+    Simulate a vegetation / FWI risk lookup.
     """
-    print(f"🌲 Analyzing vegetation for ({lat}, {lon})...")
-    
-    # Southern Ontario (below 46° latitude)
-    if lat < 46:
-        if lon > -80:  # Eastern Ontario
-            return {
-                'source': 'geographic_fallback',
-                'has_forest': True,
-                'has_wetland': False,
-                'has_grassland': True,
-                'vegetation_types': ['mixed_forest', 'agricultural', 'urban'],
-                'fire_risk_areas': ['forest', 'grassland'],
-                'region': 'Southern Ontario (East)'
-            }
-        else:  # Western/Central Ontario
-            return {
-                'source': 'geographic_fallback',
-                'has_forest': True,
-                'has_wetland': True,
-                'has_grassland': False,
-                'vegetation_types': ['deciduous_forest', 'mixed_forest', 'wetland'],
-                'fire_risk_areas': ['forest'],
-                'region': 'Southern Ontario (West/Central)'
-            }
-    else:  # Northern Ontario
-        return {
-            'source': 'geographic_fallback',
-            'has_forest': True,
-            'has_wetland': True,
-            'has_grassland': False,
-            'vegetation_types': ['boreal_forest', 'coniferous_forest', 'wetland'],
-            'fire_risk_areas': ['boreal_forest'],
-            'region': 'Northern Ontario'
-        }
+    risk_level = random.choice(["LOW", "MEDIUM", "HIGH", "VERY_HIGH"])
+    alert = risk_level in ["HIGH", "VERY_HIGH"]
 
-def get_vegetation_fire_risk(vegetation_data):
-    """Calculate fire risk from vegetation"""
-    if not vegetation_data:
-        return 'UNKNOWN'
-    
-    if vegetation_data['has_forest'] and vegetation_data['has_grassland']:
-        return 'VERY_HIGH'
-    elif vegetation_data['has_forest'] or vegetation_data['has_grassland']:
-        return 'HIGH'
-    elif vegetation_data['has_wetland']:
-        return 'LOW'
-    return 'MEDIUM'
-
-if __name__ == "__main__":
-    veg_data = fetch_vegetation_data(43.65, -79.38)
-    risk = get_vegetation_fire_risk(veg_data)
-    print(f"✅ Vegetation risk: {risk}")
-    
+    return {
+        "name": "VEGETATION_RISK",
+        "status": "ALERT" if alert else "OK",
+        "details": {
+            "lat": lat,
+            "lon": lon,
+            "risk": risk_level,
+        },
+    }

@@ -1,76 +1,63 @@
-# ===============================================
-# File: modules/fire_detection/fetch_live_data.py
-# Purpose: Fetch real-time fire and weather data
-# ===============================================
+# modules/fire_detection/fetch_live_data.py
 
-import requests
-import pandas as pd
-from datetime import datetime
-from io import StringIO
+"""
+Live data helpers for MVP 1 – Detection.
+For now, these return MOCKED data so the pipeline runs end-to-end.
+Replace the TODOs with real API calls later.
+"""
 
-def fetch_nasa_firms_data():
-    """Fetch NASA FIRMS satellite hotspots for Ontario"""
-    try:
-        url = "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Canada_24h.csv"
-        print("🛰️ Fetching NASA FIRMS data...")
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        
-        df = pd.read_csv(StringIO(response.text))
-        ontario_fires = df[
-            (df['longitude'] >= -95) & (df['longitude'] <= -74) &
-            (df['latitude'] >= 41) & (df['latitude'] <= 57)
-        ]
-        
-        print(f"✅ Found {len(ontario_fires)} hotspots")
-        return ontario_fires
-    except Exception as e:
-        print(f"⚠️ NASA FIRMS failed: {e}")
-        return None
+from typing import Dict, Any
+import random
 
-def fetch_cwfis_data():
-    """Fetch Canadian wildfire data"""
-    try:
-        url = "https://cwfis.cfs.nrcan.gc.ca/downloads/activefires/activefires.csv"
-        print("🔥 Fetching CWFIS data...")
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        
-        df = pd.read_csv(StringIO(response.text))
-        if 'src_agency' in df.columns:
-            ontario_fires = df[df['src_agency'] == 'ON']
-        else:
-            ontario_fires = df
-        
-        print(f"✅ Found {len(ontario_fires)} fires")
-        return ontario_fires
-    except Exception as e:
-        print(f"⚠️ CWFIS failed: {e}")
-        return None
 
-def fetch_weather_data(lat=43.65, lon=-79.38):
-    """Fetch weather data for location"""
-    try:
-        url = (f"https://api.open-meteo.com/v1/forecast?"
-               f"latitude={lat}&longitude={lon}"
-               f"&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation"
-               f"&timezone=America/Toronto&forecast_days=1")
-        
-        print(f"🌡️ Fetching weather for ({lat}, {lon})...")
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        
-        data = response.json()
-        if 'current' in data:
-            print(f"✅ Weather: {data['current']['temperature_2m']}°C")
-            return data
-        return None
-    except Exception as e:
-        print(f"⚠️ Weather failed: {e}")
-        return None
+def get_nasa_firms(region: str, time_window: str) -> Dict[str, Any]:
+    """
+    Simulate a NASA FIRMS hotspot query.
+    """
+    anomaly = random.random() < 0.4
+    return {
+        "name": "NASA_FIRMS",
+        "status": "ALERT" if anomaly else "OK",
+        "details": {
+            "region": region,
+            "time_window": time_window,
+            "hotspots": random.randint(0, 10),
+        },
+    }
 
-if __name__ == "__main__":
-    print("Testing data fetch...")
-    fetch_nasa_firms_data()
-    fetch_cwfis_data()
-    fetch_weather_data()
+
+def get_cwfis(region: str) -> Dict[str, Any]:
+    """
+    Simulate a CWFIS active fire query.
+    """
+    active_fire = random.random() < 0.3
+    return {
+        "name": "CWFIS",
+        "status": "ALERT" if active_fire else "OK",
+        "details": {
+            "region": region,
+            "active_fires": random.randint(0, 5),
+        },
+    }
+
+
+def get_weather(lat: float, lon: float) -> Dict[str, Any]:
+    """
+    Simulate a weather service returning fire-relevant conditions.
+    """
+    temp = random.uniform(15, 40)
+    wind = random.uniform(0, 40)
+    humidity = random.uniform(10, 80)
+    high_risk = temp > 30 and wind > 15 and humidity < 30
+
+    return {
+        "name": "WEATHER",
+        "status": "ALERT" if high_risk else "OK",
+        "details": {
+            "lat": lat,
+            "lon": lon,
+            "temp": temp,
+            "wind": wind,
+            "humidity": humidity,
+        },
+    }
