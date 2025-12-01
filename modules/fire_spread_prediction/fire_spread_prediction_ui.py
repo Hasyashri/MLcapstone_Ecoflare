@@ -1,85 +1,62 @@
-# modules/fire_spread_prediction/fire_spread_prediction_model.py
+import streamlit as st
+from modules.fire_spread_prediction.spread_model import enhanced_predict_fire_spread
+from modules.fire_spread_prediction.ml_integration import FireSpreadMLModel
+from modules.fire_spread_prediction.feature_engineering import construct_features
+from streamlit_folium import st_folium
+import folium
 
-"""
-Hybrid spread prediction model for MVP 2.
+# Load ML model - path configurable for future updates
+model_path = "ml_models/fire_spread_model.pkl"
+preprocessor_path = "ml_models/preprocessor.pkl"
+ml_model = FireSpreadMLModel(model_path, preprocessor_path)
 
-Combines the physics spread rate with an optional ML correction model.
-"""
-
-from dataclasses import dataclass, asdict
-from typing import Dict, Any
-import math
-import datetime
-import os
-
-import numpy as np
-from sklearn.linear_model import LinearRegression  # fallback mini model
-import joblib
-
-from .feature_engineering import SpreadFeatures
-from .spread_model import physics_spread_rate
-
-
-@dataclass
-class SpreadPrediction:
-    spread_rate: float
-    predicted_area: float
-    confidence: float
-    model_used: str
-    generated_at: str
-
-
-MODEL_PATH = "models/spread_model.joblib"
-
-
-def load_or_create_ml_model(model_path: str = MODEL_PATH):
+def show_fire_spread_prediction(real_time_data):
     """
-    Try loading a pre-trained model; if missing, create a tiny synthetic one.
+    Show fire spread prediction panel with real-time data inputs,
+    integrating root cause outputs and allowing easy parameter updates.
     """
-    if os.path.exists(model_path):
-        return joblib.load(model_path)
 
-    # synthetic training data just so pipeline works end-to-end
-    rng = np.random.RandomState(42)
-    X = rng.rand(200, 4)
-    y = rng.rand(200) * 2.0
-    model = LinearRegression()
-    model.fit(X, y)
+    st.header("🧯 Fire Spread Prediction Module")
 
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
-    joblib.dump(model, model_path)
-    return model
+    fire_location = real_time_data['fire_location']
+    wind = real_time_data.get('wind_data', {'speed': 10, 'direction': 45})
+    vegetation = real_time_data.get('vegetation_data', {'type': 'mixed_forest', 'moisture': 30})
+    root_cause = real_time_data.get('root_cause', 'unknown')
+    fire_timestamp = real_time_data.get('detection_time')
 
+    # Optional user control for time horizon to predict
+    time_horizon_hours = st.slider("Prediction Time Horizon (hours)", 1, 24, 12)
 
-def predict_spread(
-    features: SpreadFeatures, time_horizon: int = 60, model_path: str = MODEL_PATH
-) -> Dict[str, Any]:
-    """
-    Main prediction function used by API / dashboard.
+    # Feature engineering
+    features = construct_features(fire_location, wind, vegetation, vegetation['moisture'],
+                                  root_cause, fire_timestamp)
 
-    - Computes a physics-based spread rate.
-    - Applies an ML correction if a model is available.
-    - Estimates burned area as a growing circle.
-    """
-    spread = physics_spread_rate(features)
-    model_used = "physics_only"
-
-    model = load_or_create_ml_model(model_path)
-    if model is not None:
-        X = [[features.wind_speed, features.moisture, features.slope, features.temp]]
-        correction = float(model.predict(X)[0])
-        spread = max(spread + correction, 0.0)
-        model_used = "physics_plus_ml"
-
-    radius = spread * (time_horizon / 60.0)
-    area = math.pi * radius ** 2
-
-    prediction = SpreadPrediction(
-        spread_rate=spread,
-        predicted_area=area,
-        confidence=0.8,
-        model_used=model_used,
-        generated_at=datetime.datetime.utcnow().isoformat() + "Z",
+    # Get prediction from spread model
+    prediction = enhanced_predict_fire_spread(
+        fire_location, wind, vegetation, vegetation['moisture'],
+        root_cause, fire_timestamp,
+        ml_model=ml_model, time_horizon_hours=time_horizon_hours
     )
 
-    return asdict(prediction)
+    # Display risk level and spread rate
+    st.metric("Fire Spread Rate (km/h)", prediction['spread_rate_kmh'])
+    st.metric("Risk Level", prediction['risk_level'])
+    st.metric("Dominant Wind Direction (°)", prediction['dominant_direction_deg'])
+
+    # Map Visualization
+    m = folium.Map(location=fire_location, zoom_start=8)
+    folium.Marker(location=fire_location, tooltip="Fire Origin",
+                  icon=folium.Icon(color="red", icon="fire")).add_to(m)
+
+    for pred in prediction['predictions']:
+        folium.Circle(
+            location=(pred['predicted_head_lat'], pred['predicted_head_lon']),
+            radius=pred['estimated_area_ha'] * 10,
+            color='orange',
+            fill=True,
+            fill_opacity=0.4,
+            popup=(f"Hour: {pred['hour']}<br>Area: {int(pred['estimated_area_ha'])} ha<br>"
+                   f"Confidence: {pred['confidence']:.2f}")
+        ).add_to(m)
+
+    st_folium(m, width=700, height=450)           
