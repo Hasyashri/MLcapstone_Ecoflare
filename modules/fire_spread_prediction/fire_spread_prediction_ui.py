@@ -59,5 +59,4 @@ def show_fire_spread_prediction(real_time_data):
                    f"Confidence: {pred['confidence']:.2f}")
         ).add_to(m)
 
-    st_folium(m, width=700, height=450)
-
+    st_folium(m, width=700, height=450)           

@@ -1,56 +1,28 @@
-# ===============================================
-# File: modules/fire_detection/iot_data.py
-# Purpose: Simulate or fetch IoT sensor data
-# ===============================================
+# modules/fire_detection/iot_data.py
 
+"""
+IoT data helper for MVP 1 – Detection.
+Simulates smoke / flame sensors deployed in the field.
+"""
+
+from typing import Dict, Any
 import random
-from datetime import datetime
 
-def fetch_iot_sensor_data(sensor_id="SENSOR_001", location="Toronto"):
+
+def get_iot_sensor(location_id: str) -> Dict[str, Any]:
     """
-    Simulate IoT sensor readings for fire detection.
-    In real implementation, this would connect to actual IoT devices.
+    Simulate an IoT sensor reading.
     """
-    print(f"📡 Fetching IoT data from {sensor_id} at {location}...")
-    
-    # Simulated sensor data
-    sensor_data = {
-        'sensor_id': sensor_id,
-        'location': location,
-        'timestamp': datetime.now().isoformat(),
-        'temperature': round(random.uniform(15, 35), 2),  # Celsius
-        'smoke_level': round(random.uniform(0, 100), 2),  # 0-100 scale
-        'humidity': round(random.uniform(30, 80), 2),     # Percentage
-        'air_quality_index': random.randint(20, 150),
-        'flame_detected': random.choice([True, False])
+    smoke_level = random.uniform(0, 1)
+    flame_detected = random.random() < 0.2
+    alert = smoke_level > 0.7 or flame_detected
+
+    return {
+        "name": "IOT_SENSOR",
+        "status": "ALERT" if alert else "OK",
+        "details": {
+            "location_id": location_id,
+            "smoke_level": smoke_level,
+            "flame_detected": flame_detected,
+        },
     }
-    
-    print(f"✅ IoT Data: Temp={sensor_data['temperature']}°C, "
-          f"Smoke={sensor_data['smoke_level']}, "
-          f"Flame={sensor_data['flame_detected']}")
-    
-    return sensor_data
-
-def analyze_iot_risk(sensor_data):
-    """Analyze IoT data for fire risk"""
-    risk_score = 0
-    
-    if sensor_data['temperature'] > 30:
-        risk_score += 30
-    if sensor_data['smoke_level'] > 50:
-        risk_score += 40
-    if sensor_data['flame_detected']:
-        risk_score += 30
-    
-    if risk_score >= 70:
-        return "HIGH"
-    elif risk_score >= 40:
-        return "MEDIUM"
-    else:
-        return "LOW"
-
-if __name__ == "__main__":
-    data = fetch_iot_sensor_data()
-    risk = analyze_iot_risk(data)
-    print(f"🔥 Fire Risk from IoT: {risk}")
-    

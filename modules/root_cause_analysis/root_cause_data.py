@@ -1,44 +1,28 @@
-# root_cause_data.py
-import pandas as pd
-import geopandas as gpd
-import numpy as np
-from datetime import datetime, timedelta
-from shapely.geometry import Point
+# modules/root_cause_analysis/root_cause_data.py
 
-class RootCauseDataPipeline:
-    def __init__(self, lightning_path, population_path, infrastructure_path, weather_api, veg_raster):
-        self.lightning_path = lightning_path
-        self.population_path = population_path
-        self.infrastructure_path = infrastructure_path
-        self.weather_api = weather_api
-        self.veg_raster = veg_raster
+"""
+Data engineering for MVP 3 – Root Cause Analysis.
 
-    def ingest_realtime_fires(self, detection_data):
-        """
-        detection_data: list of dicts [{'lat': float, 'lon': float, 'timestamp': str}, ...]
-        """
-        df = pd.DataFrame(detection_data)
-        gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon, df.lat), crs="EPSG:4326")
-        gdf["timestamp"] = pd.to_datetime(gdf["timestamp"])
-        return gdf
+This module takes detection output + contextual data and produces
+a flat numeric feature dictionary ready for the classifier.
+"""
 
-    def load_reference_layers(self):
-        lightning = gpd.read_file(self.lightning_path)
-        population = gpd.read_file(self.population_path)
-        infrastructure = gpd.read_file(self.infrastructure_path)
-        return lightning, population, infrastructure
+from typing import Dict, Any
 
-    def spatial_temporal_join(self, fire_gdf, lightning, population, infrastructure):
-        fire_gdf = fire_gdf.to_crs(lightning.crs)
-        nearby_lightning = gpd.sjoin_nearest(fire_gdf, lightning, distance_col='lightning_dist')
-        merged_pop = gpd.sjoin_nearest(nearby_lightning, population, distance_col='pop_dist')
-        merged_final = gpd.sjoin_nearest(merged_pop, infrastructure, distance_col='infra_dist')
-        return merged_final
 
-    def extract_features(self, merged_gdf):
-        merged_gdf["lightning_recent"] = (merged_gdf["lightning_time"] > (datetime.utcnow() - timedelta(hours=6))).astype(int)
-        merged_gdf["infra_density"] = 1 / (merged_gdf["infra_dist"] + 1)
-        merged_gdf["pop_density"] = merged_gdf["pop_value"]
-        merged_gdf["hour"] = merged_gdf["timestamp"].dt.hour
-        feature_cols = ["lightning_recent", "infra_density", "pop_density", "hour"]
-        return merged_gdf[feature_cols], merged_gdf
+def build_rootcause_features(detection_data: Dict[str, Any]) -> Dict[str, float]:
+    """
+    Map detection + external context to numerical features.
+    """
+    features = {
+        "vote_count": float(detection_data.get("vote_count", 0)),
+        "temp": float(detection_data.get("weather_temp", 30)),
+        "wind": float(detection_data.get("weather_wind", 10)),
+        "humidity": float(detection_data.get("weather_humidity", 40)),
+        "near_power_lines": float(detection_data.get("near_power_lines", 0)),
+        "population_density": float(detection_data.get("population_density", 0)),
+        "recent_lightning_strikes": float(
+            detection_data.get("recent_lightning_strikes", 0)
+        ),
+    }
+    return features
