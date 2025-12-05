@@ -1,7 +1,7 @@
 # ===============================================
 # File: dashboard/streamlit_dashboard.py
 # Purpose: Interactive Streamlit dashboard for wildfire detection
-# FIXED: Correct import paths + logging added
+# FIXED: Correct import paths
 # ===============================================
 
 import streamlit as st
@@ -10,26 +10,6 @@ import os
 from datetime import datetime
 import time
 import pandas as pd
-import logging  # <-- added for logging
-
-# -------------------------
-# Logging setup
-# -------------------------
-logger = logging.getLogger("EcoFlareLogger")
-logger.setLevel(logging.INFO)
-
-file_handler = logging.FileHandler("app.log")
-file_handler.setLevel(logging.INFO)
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-logger.info("EcoFlare Streamlit app started")
 
 # CRITICAL FIX: Add correct paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +20,34 @@ fire_detection_dir = os.path.join(parent_dir, 'modules', 'fire_detection')
 sys.path.insert(0, parent_dir)
 sys.path.insert(0, fire_detection_dir)
 
+import logging
+
+# -------------------------
+# Logging setup
+# -------------------------
+logger = logging.getLogger("EcoFlareLogger")
+logger.setLevel(logging.INFO)
+
+# File handler - writes logs to app.log
+file_handler = logging.FileHandler("app.log")
+file_handler.setLevel(logging.INFO)
+
+# Formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add handler to logger
+logger.addHandler(file_handler)
+
+# Optional: console output for debugging
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# Log app start
+logger.info("EcoFlare Streamlit app started")
+
+
 # Import directly from module files (not from 'modules' package)
 try:
     from fetch_live_data import fetch_nasa_firms_data, fetch_cwfis_data, fetch_weather_data
@@ -47,7 +55,6 @@ try:
     from vegetation_data import fetch_vegetation_data, get_vegetation_fire_risk
 except ImportError as e:
     st.error(f"Import Error: {e}")
-    logger.error(f"Import error: {e}")  # <-- log import errors
     st.error(f"Current directory: {current_dir}")
     st.error(f"Fire detection directory: {fire_detection_dir}")
     st.error(f"Python path: {sys.path[:3]}")
@@ -152,7 +159,6 @@ st.sidebar.info("""
 @st.cache_data(ttl=60, show_spinner=False)
 def run_detection(lat, lon, location_name):
     """Run fire detection and return results"""
-    logger.info(f"Running fire detection for location: {location_name} ({lat}, {lon})")  # <-- log start
     
     results = {
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -221,15 +227,9 @@ def run_detection(lat, lon, location_name):
     
     results['fire_votes'] = fire_votes
     results['fire_detected'] = fire_votes >= 2
-
-    # Log results
-    logger.info(f"Fire detection completed: {results['fire_detected']} with {results['fire_votes']}/{results['total_votes']} votes")
-    for ev in results['evidence']:
-        logger.info(f"Evidence: {ev}")
     
     return results
 
-# (The rest of your code remains exactly the same)
 # Run detection with loading spinner
 with st.spinner('🔍 Running multi-source wildfire detection...'):
     results = run_detection(lat, lon, location_preset if location_preset != "Custom" else "Custom Location")
@@ -357,4 +357,3 @@ with st.expander("📡 View Detailed Source Data"):
 # Footer
 st.markdown("---")
 st.caption("🔥 EcoFlare AI - Wildfire Detection & Management System | Built with ❤️ for Ontario")
-logger.info("EcoFlare Streamlit app finished rendering")

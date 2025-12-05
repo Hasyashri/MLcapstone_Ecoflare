@@ -6,12 +6,18 @@
 import random
 from datetime import datetime
 
+# 🔥 ADD THIS BLOCK ONLY
+from utils.logger import setup_logger
+logger = setup_logger("iot_data")
+# 🔥 END OF BLOCK
+
+
 def fetch_iot_sensor_data(sensor_id="SENSOR_001", location="Toronto"):
     """
     Simulate IoT sensor readings for fire detection.
     In real implementation, this would connect to actual IoT devices.
     """
-    print(f"📡 Fetching IoT data from {sensor_id} at {location}...")
+    logger.info(f"Fetching IoT data from {sensor_id} at {location}...")   # added
     
     # Simulated sensor data
     sensor_data = {
@@ -25,11 +31,12 @@ def fetch_iot_sensor_data(sensor_id="SENSOR_001", location="Toronto"):
         'flame_detected': random.choice([True, False])
     }
     
-    print(f"✅ IoT Data: Temp={sensor_data['temperature']}°C, "
-          f"Smoke={sensor_data['smoke_level']}, "
-          f"Flame={sensor_data['flame_detected']}")
+    logger.info(f"IoT Data Read — Temp={sensor_data['temperature']}°C, "
+                f"Smoke={sensor_data['smoke_level']}, "
+                f"Flame={sensor_data['flame_detected']}")  # added
     
     return sensor_data
+
 
 def analyze_iot_risk(sensor_data):
     """Analyze IoT data for fire risk"""
@@ -49,8 +56,9 @@ def analyze_iot_risk(sensor_data):
     else:
         return "LOW"
 
+
 if __name__ == "__main__":
     data = fetch_iot_sensor_data()
     risk = analyze_iot_risk(data)
     print(f"🔥 Fire Risk from IoT: {risk}")
-    
+    logger.info(f"🔥 Fire Risk from IoT: {risk}")  # added
