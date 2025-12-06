@@ -1,0 +1,53 @@
+# ignore venv 
+venv/
+# ignore python cache files
+__pycache__/
+*.py[cod]
+# ignore environment files
+.env
+.venv
+env/
+env.bak/
+venv.bak/
+# ignore IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+# ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints
+# ignore log files
+*.log
+# ignore data files
+data/
+*.csv
+*.json
+*.xlsx
+# Virtual environment
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Data files
+data/raw/
+data/interim/
+data/temp/
+*.csv
+*.parquet
+*.pkl
+*.nc
+*.grib
+*.tif
+
+# Logs
+logs/
+*.log
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/

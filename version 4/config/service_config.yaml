@@ -1,0 +1,24 @@
+# 2nd file -
+# %%writefile config/service_config.yaml
+# EcoFlare Module 1 - REAL API CONFIGURATION
+# ALL URLs verified working Nov 30, 2025
+ingestion:
+  satellite:
+    modis_canada: "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Canada_24h.csv"
+    cwfis_activefires: "https://cwfis.cfs.nrcan.gc.ca/downloads/activefires/activefires.csv"
+    viirs_canada: "https://firms.modaps.eosdis.nasa.gov/data/active_fire/viirs-c2/csv/VIIRS_C2_Canada_24h.csv"
+
+  iot:
+    ontario_aq: "https://data.ontario.ca/api/3/action/datastore_search?resource_id=d7f3176d-5c0b-4d01-a56b-6b6a3c8c1b26&limit=50"
+    openaq_latest: "https://api.openaq.org/v2/latest?limit=100"
+
+  weather:
+    toronto_forecast: "https://api.open-meteo.com/v1/forecast"
+
+  terrain:
+    open_meteo_elevation: "https://api.open-meteo.com/v1/elevation"
+    nrcan_cdem_zip: "https://ftp.maps.canada.ca/pub/elevation/cdem_dem/cdem_dem.zip"
+
+  vegetation:
+    cwfis_fwi: "https://cwfis.cfs.nrcan.gc.ca/datamart/dpi/csv/FWI_20251129.csv"
+
