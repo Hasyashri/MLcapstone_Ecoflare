@@ -1,0 +1,29 @@
+# %%writefile config/ingestion_config.yaml
+# EcoFlare Production Config - SECURITY READY
+# APIs verified working Nov 30, 2025
+data:
+  base_dir: "data"
+  subdirs:
+    - firms
+    - cwfis  
+    - iot
+    - weather
+    - terrain
+    - vegetation
+    
+api_endpoints:
+  satellite:
+    modis_canada: "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Canada_24h.csv"
+    viirs_canada: "https://firms.modaps.eosdis.nasa.gov/data/active_fire/viirs-c2/csv/VIIRS_C2_Canada_24h.csv"
+    cwfis_active: "https://cwfis.cfs.nrcan.gc.ca/downloads/activefires/activefires.csv"
+  
+  iot:
+    air_quality: "https://air-quality-api.open-meteo.com/v1/air-quality"
+  
+  weather:
+    forecast: "https://api.open-meteo.com/v1/forecast"
+
+locations:
+  toronto:
+    lat: 43.6532
+    lon: -79.3832

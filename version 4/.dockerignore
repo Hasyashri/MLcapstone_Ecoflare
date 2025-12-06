@@ -1,0 +1,13 @@
+venv/
+
+__pycache__/
+.git/
+
+test_dashboards/
+extra files/
+.env
+.venv
+env/
+env.bak/
+app_offline_dashboard.py
+app2.py
