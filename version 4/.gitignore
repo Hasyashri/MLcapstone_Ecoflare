@@ -19,6 +19,8 @@ venv.bak/
 # ignore log files
 *.log
 # ignore data files
+extra files/
+test_dashboard/
 data/
 *.csv
 *.json
@@ -37,7 +39,7 @@ data/interim/
 data/temp/
 *.csv
 *.parquet
-*.pkl
+
 *.nc
 *.grib
 *.tif
